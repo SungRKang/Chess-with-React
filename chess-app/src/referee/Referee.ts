@@ -21,7 +21,6 @@ export default class Referee {
 
       
     }
-    console.log("Invalid Move!");
     return false;
   }
 }
