@@ -11,18 +11,39 @@ export default class Referee {
   }
 
   tileIsOccupiedByOpponent(x: number, y:number, boardState: Piece[], team: TeamType): boolean {
-
     const piece = boardState.find((p) => p.x === x && p.y === y && p.team !== team);
-
     if (piece) {
       return true;
     } else {
       return false;
     }
-
   } 
 
-  isValidMove(px: number, py:number, x:number, y:number, type: PieceType, team: TeamType, boardState: Piece[] ) {
+  isEnPassantMove(px: number, py:number, x:number, y:number, type: PieceType, team: TeamType, boardState: Piece[]) {
+    const pawnDirection = (team === TeamType.WHITE) ? 1 : -1;
+    
+    if(type === PieceType.PAWN) {
+      if((x-px === -1 || x-px === 1) && y-py === pawnDirection) {
+        const piece = boardState.find(p => p.x === x && p.y === y - pawnDirection && p.enPassant);
+        if(piece) {
+          return true;
+        }
+      }
+    }
+    //if the attacking piece is a pawn
+
+    //upper left / upper right || bottom left / bottom right
+    //if a piece is under  / above the attacked tile
+    //if the attacked piece has made an en passant move in the previous turn
+
+    //put the piece in correct position
+    //remove en passanted piece
+    return false;
+    
+  }
+
+
+  isValidMove(px: number, py:number, x:number, y:number, type: PieceType, team: TeamType, boardState: Piece[]) {
     if (type === PieceType.PAWN) {
       const startingRow = (team === TeamType.WHITE) ? 1 : 6;
       const pawnDirection = (team === TeamType.WHITE) ? 1 : -1;
@@ -42,21 +63,14 @@ export default class Referee {
         //attacking upper left or bottom left corner
         if(this.tileIsOccupiedByOpponent(x,y,boardState,team)){
           return true;
-        }
+        } 
       } else if (x-px === 1 && y-py === pawnDirection) {
         //attacking upper right or bottom right corner
         if(this.tileIsOccupiedByOpponent(x,y,boardState,team)){
           return true; 
         }
-      }
+      } 
     }
-
-
-
-
-
-
-
   return false;
   }
 }
