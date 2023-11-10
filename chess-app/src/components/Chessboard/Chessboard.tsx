@@ -13,6 +13,7 @@ export interface Piece {
   y: number
   type: PieceType
   team: TeamType
+  enPassant?: boolean;
 }
 
 export enum PieceType {
@@ -58,6 +59,7 @@ export default function Chessboard() {
   const [gridX, setGridX] = useState(0);
   const [gridY, setGridY] = useState(0);
   const [pieces, setPieces] = useState<Piece[]>(initialBoardState);
+  
   const chessboardRef = useRef<HTMLDivElement>(null);
   const referee = new Referee();
 
@@ -114,23 +116,53 @@ export default function Chessboard() {
       const y = Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - 800) / 100));
       
       const currentPiece = pieces.find((p) => p.x === gridX && p.y === gridY);
-      //const attackedPiece = pieces.find((p) => p.x === x && p.y === y);
+      const attackedPiece = pieces.find((p) => p.x === x && p.y === y);
 
+    
       if (currentPiece) {
         const validMove = referee.isValidMove(gridX,gridY,x,y,currentPiece?.type, currentPiece.team, pieces);
         
-        if(validMove) {
+        const isEnPassantMove = referee.isEnPassantMove(gridX, gridY, x, y, currentPiece.type, currentPiece.team, pieces);
+
+        const pawnDirection = (currentPiece.team === TeamType.WHITE) ? 1 : -1;
+
+        if (isEnPassantMove) {
+          const updatedPieces = pieces.reduce((results, piece) => {
+            if(piece.x === gridX && piece.y === gridY) {
+              piece.enPassant = false;
+              piece.x = x;
+              piece.y =y;
+              results.push(piece);
+            } else if(!(piece.x === x && piece.y === y - pawnDirection)) {
+              if (piece.type === PieceType.PAWN) {
+                piece.enPassant = false;
+              }
+              results.push(piece);
+            }
+
+            return results;
+          }, [] as Piece[]);
+          setPieces(updatedPieces);
+
+        } else if(validMove) {
           //updates the piece position
           //and if piece is attacked, removes it
           const updatedPieces = pieces.reduce((results, piece) => {
-            if(piece.x === currentPiece.x && piece.y === currentPiece.y){
+            if(piece.x === gridX && piece.y === gridY){
+              if(Math.abs(gridY - y) === 2 && piece.type === PieceType.PAWN) {
+                piece.enPassant = true;
+              } else {
+                piece.enPassant = false;
+              }
               piece.x = x;
               piece.y = y;
               results.push(piece);
             } else if(!(piece.x === x && piece.y === y)) {
+              if (piece.type === PieceType.PAWN) {
+                piece.enPassant = false;
+              }
               results.push(piece);
             }
-
             return results;
           }, [] as Piece[]);
 
@@ -145,8 +177,9 @@ export default function Chessboard() {
       setActivePiece(null);
     }
   }
-  let board = [];
 
+  let board = [];
+  // render pieces based on boardstate
   for(let j=verticalAxis.length-1; j>=0; j--) {
     for(let i=0; i<horizontalAxis.length; i++) {
       const number = j+i+2;
@@ -160,7 +193,8 @@ export default function Chessboard() {
 
       board.push(<Tile key={`${i},${j}`}image={image} number={number}/>)
     }
-}
+  }
+  // post render save current boardstate
   return (
   <div 
     onMouseMove={(e) => movePiece(e)} 
