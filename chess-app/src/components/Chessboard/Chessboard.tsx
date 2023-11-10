@@ -67,7 +67,7 @@ export default function Chessboard() {
       const currentPiece = pieces.find((p) => samePosition(p.position, grabPosition));
     
       if (currentPiece) {
-        const validMove = referee.isValidMove(grabPosition, {x:x,y:y},currentPiece?.type, currentPiece.team, pieces);
+        const validMove = referee.isValidMove(grabPosition, {x,y},currentPiece?.type, currentPiece.team, pieces);
         
         const isEnPassantMove = referee.isEnPassantMove(grabPosition,{x, y}, currentPiece.type, currentPiece.team, pieces);
 
